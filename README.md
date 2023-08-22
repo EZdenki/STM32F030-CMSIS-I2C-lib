@@ -30,19 +30,23 @@ Set the I2C interface into the write mode.
 Read a byte from the I2C interface.
 
 ## Normal Write Command Flow:
-1. ```I2C_setAddress( I2C1, deviceI2CAddress )```    (Set once per device)
-2. ```I2C_setNBytes( I2C1, numberOfBytesToTransmit )```
-3. ```I2C_start( I2C1 )```
-4. ```I2C_write( I2C1, data )```<br>
-(repeat write as required)
-5. ```I2C_stop( I2C1 )```
+```
+I2C_init( I2C1, I2CSpeed ); // (Call once in program)
+
+I2C_setAddress( I2C1, deviceI2CAddress );   // (Set once per device)
+I2C_setNBytes( I2C1, numberOfBytesToTransmit );
+I2C_start( I2C1 );
+I2C_write( I2C1, data );   // (repeat write as required)
+I2C_stop( I2C1 );
+```
 
 ## Normal Read Command Flow:
-1. ```I2C_setAddress( I2C1, deviceI2CAddress )```  (Set once per device)
-2. ```I2C_setNBytes( I2C1, numberOfBytesToReceive )```
-3. ```I2C_setReadMode( I2C1 )```
-4. ```I2C_start( I2C1 )```
-5. ```data[0] = I2C_read( I2C1 )```<br>
-(repeat read as required)
-6. ```I2C_stop( I2C1 )```
-7. ```I2C_setWriteMode( I2C1 )```
+```
+I2C_setAddress( I2C1, deviceI2CAddress );   // (Set once per device)
+I2C_setNBytes( I2C1, numberOfBytesToReceive );
+I2C_setReadMode( I2C1 );
+I2C_start( I2C1 );
+data[0] = I2C_read( I2C1 );   //(repeat read as required)
+I2C_stop( I2C1 );
+I2C_setWriteMode( I2C1 );
+```
