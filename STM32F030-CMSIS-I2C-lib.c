@@ -1,21 +1,44 @@
-// STM32F030-CMSIS-I2C-lib.c
-//    Simple I2C library for the STM32F030 microcontroller running at 8 MHz.
+//  ==========================================================================================
+//  STM32F030-CMSIS-I2C.lib.c
+//  ------------------------------------------------------------------------------------------
+//  Simple I2C library for the STM32F030 microcontroller running at 8 MHz.
+//  ------------------------------------------------------------------------------------------
+//  https://github.com/EZdenki/STM32F030-CMSIS-I2C-lib
+//  Released under the MIT License
+//  Copyright (c) 2023
+//  Mike Shegedin, EZdenki.com
+//  Version 1.0    5 Aug 2023   Updated init procedure
+//  Version 0.9   23 Jul 2023   Start
+//  ------------------------------------------------------------------------------------------
+//  Target Device:
+//    STM32F030Fxxx running at 8 MHz internal clock
+//    Any standard I2C device
+//  ------------------------------------------------------------------------------------------
+//  Hardware Setup:
 //
-//    Mike Shegedin, EZdenki.com
+//                  STM32F030Fxxx
+//                   .---. .---.                      ,---- [5.7 k] --- VCC
+//             BOOT0 |1o  V  20| PA14 / SWCLK         |
+//            OSC_IN |2      19| PA13 / SWDIO         |    .-------------. 
+//           OSC_OUT |3      18| PA10 / I2C1_SDA | ---'--- | SDA  I2C    |
+//              NRST |4      17| PA9  / I2C1_SCL | ---,--- | SCL  Device |
+//              VDDA |5      16| VCC                  |    '-------------'
+//               PA0 |6      15| GND                  |
+//               PA1 |7      14| PB1                  '---- [5.7 k] --- VCC
+//               PA2 |8      13| PA7
+//               PA3 |9      12| PA6
+//               PA4 |10     11| PA5
+//                   '---------'
 //
-//    Version 1.0	  17 Jul 2023	  Added I2C Speed Setting to I2C_init function.
-//    Version 0.9      May 2023   Started port from STM32F103-CMSIS-I2C-lib.c
+//  Note that the desired target I2C interface, I2C1, will be passed to *thisI2C. The
+//  interface name is passed as-is, like "I2C_init( I2C1 );". Note that I2C2 is not
+//  supported.
 //
+//  The following routines are supported:
+//  ------------------------------------------------------------------------------------------
 //
-//    Target Microcontroller: STM32F103 (Blue Pill)
-//
-// Code to implement the following routines.
-// Note that the desired target I2C interface, I2C1, will be passed to *thisI2C. The
-// interface name is passed as-is, like "I2C_init( I2C1 );". Note that I2C2 is currently not
-// supported.
-// --------------------------------------------------------------------------------------------
-// void
-// I2C_init( I2C_TypeDef *thisI2C, uint32_t I2CSpeed )
+//  void
+//  I2C_init( I2C_TypeDef *thisI2C, uint32_t I2CSpeed )
 //    Initialize the specified I2C interface to operate at the specified speed. Note that
 //    currently *only I2C1* is supported! I2C1 uses the following pins:
 //        SCL: GPIO pin A9,  pin 17
@@ -23,44 +46,43 @@
 //    Possible I2C speeds are from 10 kHz up to 400 kHz. Speeds below 10 kHz will default to
 //    10 kHz and speeds above 400 kHz will default to 400 kHz.
 // --------------------------------------------------------------------------------------------
-// void
-// I2C_start( I2C_TypeDef *thisI2C )
+//  void
+//  I2C_start( I2C_TypeDef *thisI2C )
 //    Set the start bit and wait for acknowledge that it was set.
 // --------------------------------------------------------------------------------------------
-// void
-// I2C_setAddress( I2C_TypeDef *thisI2C, uint8_t address )
+//  void
+//  I2C_setAddress( I2C_TypeDef *thisI2C, uint8_t address )
 //    Write the address to the SADD bits of the CR2 register.
+// --------------------------------------------------------------------------------------------
+//   void
+//   I2C_stop( I2C_TypeDef *thisI2C )
+//     Set and then clear the stop bit.
+// --------------------------------------------------------------------------------------------
+//   void
+//   I2C_setNBytes( I2C_TypeDef *thisI2C, uint8_t nBytes )
+//     Set the number of bytes to be written.
+// --------------------------------------------------------------------------------------------
+//   void
+//   I2C_write( I2C_TypeDef *thisI2C, uint8_t data )
+//     Write a byte of data to the I2C interface.
 // --------------------------------------------------------------------------------------------
 //  void
 //  I2C_stop( I2C_TypeDef *thisI2C )
-//    Set and then clear the stop bit.
-// --------------------------------------------------------------------------------------------
-//  void
-//  I2C_setNBytes( I2C_TypeDef *thisI2C, uint8_t nBytes )
-//    Set the number of bytes to be written.
-// --------------------------------------------------------------------------------------------
-//  void
-//  I2C_write( I2C_TypeDef *thisI2C, uint8_t data )
-//    Write a byte of data to the I2C interface.
-// --------------------------------------------------------------------------------------------
-// void
-// I2C_stop( I2C_TypeDef *thisI2C )
 //    Send the I2C stop bit and wait 20 us to allow enough time for next I2C command to occur
 //    properly.
 // --------------------------------------------------------------------------------------------
-//  void
-//  I2C_setReadMode( I2C_TypeDef *thisI2C )
-//    Set the I2C interface into the read mode.
+//   void
+//   I2C_setReadMode( I2C_TypeDef *thisI2C )
+//     Set the I2C interface into the read mode.
 // --------------------------------------------------------------------------------------------
-//  void
-//  I2C_setWriteMode( I2C_TypeDef *thisI2C )
-//    Set the I2C interface into the write mode.
+//   void
+//   I2C_setWriteMode( I2C_TypeDef *thisI2C )
+//     Set the I2C interface into the write mode.
 // --------------------------------------------------------------------------------------------
-//  uint8_t
-//  I2C_read( I2C_TypeDef *thisI2C )
-//    Read a byte from the I2C interface.
-// --------------------------------------------------------------------------------------------
-
+//   uint8_t
+//   I2C_read( I2C_TypeDef *thisI2C )
+//     Read a byte from the I2C interface.
+//
 // --------------------------------------------------------------------------------------------
 //
 //  Normal Write Command Flow:
@@ -83,7 +105,7 @@
 //  I2C_stop( I2C1 )
 //  I2C_setWriteMode( I2C1 )
 //
-// --------------------------------------------------------------------------------------------
+//  ==========================================================================================
 
 
 #ifndef __STM32F030_CMSIS_I2C_LIB_C
